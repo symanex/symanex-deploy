@@ -1,0 +1,14 @@
+---
+
+- name: teardown | ensure nginx service is stopped
+  sudo: True
+  service: name=nginx state=stopped
+
+- name: teardown | ensure nginx service is disabled
+  sudo: True
+  service: name=nginx state=disabled
+
+- name: teardown | ensure nginx service is removed
+  sudo: True
+  service: name=nginx state=absent
+

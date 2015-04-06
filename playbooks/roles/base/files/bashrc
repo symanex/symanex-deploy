@@ -1,0 +1,15 @@
+if [[ $- != *i* ]] ; then
+  # shell is non-interactive. be done now!
+  return
+fi
+
+if [ -d $HOME/.bashrc.d ]; then
+  for file in $HOME/.bashrc.d/*.sh; do 
+    if [ ! -x $file ]; then
+      # skip file if not executable.
+      # this allow disabling files by removing the 'x' bit.
+      continue
+    fi
+    source $file
+  done
+fi

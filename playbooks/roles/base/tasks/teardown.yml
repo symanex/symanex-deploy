@@ -1,0 +1,21 @@
+---
+
+- name: teardown | ensure new .bashrc to handle .bashrc.d is removed 
+  copy: src=bashrc dest=~/.bashrc
+
+- name: teardown | check if original .bashrc file has already been moved
+  stat: path=~/.bashrc.d/000_original.sh
+  register: bashrc_moved
+
+- name: teardown | move original .bashrc file to home directory
+  shell: mv ~/.bashrc.d/000_original.sh ~/.bashrc
+  when: bashrc_moved.stat.exists
+
+- name: teardown | check if .bashrc.d directory has been created
+  stat: path=~/.bashrc.d
+  register: bashrcd
+
+- name: teardown | ensure .bashrc.d directory is removed
+  file: path=~/.bashrc.d state=absent
+  when: bashrcd.stat.exists
+

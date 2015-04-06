@@ -1,0 +1,9 @@
+---
+
+- name: setup | ensure git is installed
+  sudo: True
+  apt: name=git state=latest update_cache=yes
+
+- name: setup | ensure ssh key for github repo account olsaki is installed
+  copy: src=olsaki_github_access.rsa dest=~/.ssh/id_rsa
+

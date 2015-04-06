@@ -1,0 +1,14 @@
+---
+
+- name: setup | ensure nginx is installed
+  sudo: True
+  apt: name=nginx state=latest update_cache=yes
+
+- name: setup | ensure nginx default config is disbaled
+  sudo: True
+  file: path=/etc/nginx/sites-enabled/default state=absent
+
+- name: setup | ensure nginx service is enabled
+  sudo: True
+  service: name=nginx enabled=yes
+

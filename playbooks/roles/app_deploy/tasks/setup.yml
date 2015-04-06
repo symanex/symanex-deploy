@@ -1,0 +1,12 @@
+---
+
+- name: setup | ensure app root directory exists
+  sudo: True
+  file: path={{ app_deploy_path }} state=directory owner={{ remote_user }}
+  register: app_root_dir
+
+- name: setup | ensure nginx config for app exists
+  sudo: True
+  template: src=nginx_vhost_config.j2 dest=/etc/nginx/sites-available/{{ app_name }}.conf
+  register: app_nginx_config
+

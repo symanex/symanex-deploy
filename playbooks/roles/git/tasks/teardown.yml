@@ -1,0 +1,9 @@
+---
+
+- name: teardown | ensure ssh key for github repo account olsaki is removed
+  file: patch=~/.ssh/id_rsa state=ansent
+
+- name: teardown | ensure git is removed
+  sudo: True
+  apt: name=git state=absent
+

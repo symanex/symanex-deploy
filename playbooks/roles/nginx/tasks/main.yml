@@ -1,0 +1,18 @@
+---
+
+- include: setup.yml
+  tags:
+  - setup
+
+- include: start.yml
+  tags:
+  - start
+
+- include: stop.yml
+  tags:
+  - stop
+
+- include: teardown.yml
+  tags:
+  - teardown
+

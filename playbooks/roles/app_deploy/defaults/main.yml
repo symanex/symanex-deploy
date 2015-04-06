@@ -1,0 +1,1 @@
+app_deploy_path: "/mnt/deploy/{{ app_name }}"

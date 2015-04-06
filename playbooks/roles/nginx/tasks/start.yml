@@ -1,0 +1,6 @@
+---
+
+- name: start | ensure nginx service is started
+  sudo: True
+  service: name=nginx state=started
+

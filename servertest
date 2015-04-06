@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+#from aws import *
+#print "=> lauching servers ..."
+#[s1,s2,s3] = [Server(),Server(),Server()]
+
+import ansible.runner
+print "=> checking servers ..."
+runner = ansible.runner.Runner(
+   host_list='hosts/ec2.py',
+   remote_user='ubuntu',
+   module_name='ping',
+   module_args='',
+   pattern='ec2',
+   forks=10
+)
+result = runner.run()
+
+import json
+print json.dumps(result, indent=4, sort_keys=True)
+
+#print "bootstrapping servers ..."
+#for server in [s1,s2,s3]:
+#  server.execute("sudo apt-get update && sudo apt-get -y install nginx", silent_wait=False)
+#  server.attach_to_elb("symanex-test")

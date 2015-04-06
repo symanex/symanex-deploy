@@ -1,0 +1,12 @@
+---
+- name: deploy app {{ app_name }}
+  hosts: tag_Apps_symanex-site:tag_Apps_*,symanex-site:tag_Apps_symanex-site,*
+  remote_user: "{{ remote_user }}"
+  roles:
+  - { role: app_deploy }
+  vars:
+  - remote_user: "ubuntu"
+  - app_name: "symanex-site"
+  - app_repo: "symanex/symanex-site"
+  - app_version: "master"
+  - app_host: "www.symanex.com"

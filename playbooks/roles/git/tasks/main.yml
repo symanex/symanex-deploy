@@ -1,0 +1,10 @@
+---
+
+- include: setup.yml
+  tags:
+  - setup
+
+- include: teardown.yml
+  tags:
+  - teardown
+

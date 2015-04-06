@@ -1,0 +1,26 @@
+---
+
+- name: setup | check if .bashrc.d directory has been created
+  stat: path=~/.bashrc.d
+  register: bashrcd
+
+- name: setup | create .bashrc.d directory
+  file: path=~/.bashrc.d state=directory
+  when: not bashrcd.stat.exists
+
+- name: setup | check if original .bashrc file has already been moved
+  stat: path=~/.bashrc.d/000_original.sh
+  register: bashrc_moved
+
+- name: setup | check if original .bashrc file exists
+  stat: path=~/.bashrc
+  register: bashrc
+  when: not bashrc_moved.stat.exists
+
+- name: setup | move original .bashrc file to .bashrc.d directory
+  shell: mv ~/.bashrc ~/.bashrc.d/000_original.sh
+  when: not bashrc_moved.stat.exists and bashrc.stat.exists
+
+- name: setup | ensure new .bashrc to handle .bashrc.d is installed
+  copy: src=bashrc dest=~/.bashrc
+

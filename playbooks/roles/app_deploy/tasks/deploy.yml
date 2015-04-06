@@ -1,0 +1,30 @@
+---
+
+- name: deploy | checkout app from repository into stage directory
+  git: repo=ssh://git@github.com/{{ app_repo }} dest=/mnt/deploy/{{ app_name }}/stage version={{ app_version }} accept_hostkey=yes
+  register: app_git_checkout
+
+- name: deploy | ensure nginx config for app is disabled
+  sudo: True
+  file: path=/etc/nginx/sites-enabled/{{ app_name }}.conf state=absent
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx is reloaded after disabling nginx config for app
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | synchronize stage directory with current directory
+  synchronize: src={{ app_deploy_path }}/stage dest={{ app_deploy_path }}/current
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx config for app is enabled
+  sudo: True
+  file: src=/etc/nginx/sites-available/{{ app_name }}.conf dest=/etc/nginx/sites-enabled/{{ app_name }}.conf state=link
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx is reloaded after enabling nginx config for app
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_git_checkout.before != app_git_checkout.after
+

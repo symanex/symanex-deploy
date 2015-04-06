@@ -1,0 +1,6 @@
+---
+- name: provision new nginx server
+  hosts: tag_Roles_nginx:tag_Roles_*,nginx:tag_Roles_nginx,*:self
+  remote_user: ubuntu
+  roles: 
+  - nginx

@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+import sys
+from time import sleep
+from aws import *
+aws = AWSTools()
+
+required_server_roles = [ "nginx" ]
+# TODO: takes this from a command line parameter
+app_name = "symanex-site"
+
+print "=> checking that enough servers are running ..."
+min_server_count = 3
+cur_server_count = len(aws.get_servers(filters={"tag:Roles":"nginx"}))
+gap_server_count = min_server_count - cur_server_count
+
+if gap_server_count:
+  print "not enough suitable servers found (%s of %s)" % (cur_server_count, min_server_count)
+  print "lauching %s new server(s)" % (gap_server_count)
+  servers = []
+  for i in range(0, gap_server_count):
+    servers.append(Server())
+  for server in servers:
+    server.wait_for_instance(quite=False)
+    server.wait_for_port(22, quite=False)
+    for role in required_server_roles:
+      print "registering Role %s at instance %s" % (role, server.instance_id)
+      server.add_role(role)
+    print "registering App %s at instance %s" % (app_name, server.instance_id)
+    server.add_app(app_name)
+  servers = False
+
+print "=> preparing ansible run to update all related servers"
+import ansible.runner
+import ansible.playbook
+from ansible import callbacks
+from ansible import utils
+stats = callbacks.AggregateStats()
+playbook_cb = callbacks.PlaybookCallbacks(verbose=utils.VERBOSITY) 
+runner_cb = callbacks.PlaybookRunnerCallbacks(stats, verbose=utils.VERBOSITY) 
+pb = ansible.playbook.PlayBook(
+    host_list='hosts/ec2.py',
+    playbook="playbooks/app-%s.yml" % (app_name),
+    only_tags=[ "setup", "start", "deploy" ],
+    forks=10,
+    stats=stats,
+    callbacks=playbook_cb,
+    runner_callbacks=runner_cb
+)
+
+print "=> running ansible to update all related servers"
+pb.run()
+
