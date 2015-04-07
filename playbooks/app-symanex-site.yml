@@ -5,7 +5,6 @@
   roles:
   - { role: app_deploy }
   vars:
-  - remote_user: "ubuntu"
   - app_name: "symanex-site"
   - app_repo: "symanex/symanex-site"
   - app_version: "master"
