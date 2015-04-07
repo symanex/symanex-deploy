@@ -3,6 +3,7 @@ class AWSTools:
 
   def __init__(self):
     self.__ec2_connection = None
+    self.__autoscale_connection = None
     self.__elb_connection = None
     self.__r53_connection = None
 
@@ -12,6 +13,13 @@ class AWSTools:
       import boto.ec2
       self.__ec2_connection = boto.ec2.connect_to_region('eu-west-1')
     return self.__ec2_connection
+
+  @property
+  def autoscale(self):
+    if not self.__autoscale_connection:
+      import boto.ec2.autoscale
+      self.__autoscale_connection = boto.ec2.autoscale.connect_to_region('eu-west-1')
+    return self.__autoscale_connection
 
   @property 
   def elb(self):
