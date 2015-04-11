@@ -8,7 +8,8 @@ app_name = False
 required_server_roles = [ "nginx" ]
 ansible_tags = [ "setup", "start", "deploy" ]
 min_server_count = 1
-cur_server_count = len(aws.get_servers(filters={"tag:Roles":"nginx"}))
+cur_servers = aws.get_servers(filters={"tag:Roles":"nginx"})
+
 
 def usage(msg = False):
   if msg:
@@ -29,7 +30,7 @@ for opt, arg in opts:
   elif opt in ("-a", "--app"):
     app_name = arg
   elif opt in ("-c", "--count"):
-    min_server_count = arg
+    min_server_count = int(arg)
   elif opt in ("-t", "--tags"):
     ansible_tags = arg.split(",")
 
@@ -37,7 +38,7 @@ if not app_name:
   usage("ERROR: <app_name> needs to be specified")
   sys.exit(2)
 
-gap_server_count = int(min_server_count) - int(cur_server_count)
+gap_server_count = min_server_count - len(cur_servers)
 
 print "=> checking that enough servers are running ..."
 if gap_server_count > 0:
@@ -55,6 +56,12 @@ if gap_server_count > 0:
     print "registering App %s at instance %s" % (app_name, server.instance_id)
     server.add_app(app_name)
   servers = False
+
+print "=> registering App '%s' at existing instances ..." % (app_name)
+for cur_server in cur_servers:
+  print "registering App %s at instance %s" % (app_name, cur_server.instance_id)
+  cur_server.add_app(app_name)
+cur_servers = False
 
 print "=> preparing ansible run to update all related servers"
 import ansible.runner

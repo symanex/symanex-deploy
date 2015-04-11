@@ -215,7 +215,8 @@ class Server:
 
   def add_app(self, app_name):
     '''add an app to the Server'''
-    if not any(x in self.VALID_APP_SERVICE_ROLES for x in self.__roles):
+    if not any(x in self.VALID_APP_SERVICE_ROLES for x in self.get_roles()):
+      import errno
       raise EnvironmentError(errno.EPERM, "server does not have a compatible role, valid: %s" % (','.join(set(self.VALID_APP_SERVICE_ROLES))))
     apps = self.__apps
     self.__apps.append(app_name)
