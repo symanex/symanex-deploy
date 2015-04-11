@@ -37,7 +37,7 @@ if not app_name:
   usage("ERROR: <app_name> needs to be specified")
   sys.exit(2)
 
-gap_server_count = min_server_count - cur_server_count
+gap_server_count = int(min_server_count) - int(cur_server_count)
 
 print "=> checking that enough servers are running ..."
 if gap_server_count > 0:
