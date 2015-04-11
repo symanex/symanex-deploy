@@ -1,7 +1,7 @@
 ---
 
 - name: deploy | checkout app from repository into stage directory
-  git: repo=ssh://git@github.com/{{ app_repo }} dest=/mnt/deploy/{{ app_name }}/stage version={{ app_version }} accept_hostkey=yes
+  git: repo=https://github.com/{{ app_repo }} dest=/mnt/deploy/{{ app_name }}/stage version={{ app_version }} accept_hostkey=yes
   register: app_git_checkout
 
 - name: deploy | ensure nginx config for app is disabled
