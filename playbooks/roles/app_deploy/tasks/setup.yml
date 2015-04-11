@@ -11,3 +11,8 @@
   register: app_nginx_config
   when: app_host is defined
 
+- name: setup | ensure nginx is reloaded after nginx config for app has changed
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_nginx_config is defined and app_nginx_config.changed
+
