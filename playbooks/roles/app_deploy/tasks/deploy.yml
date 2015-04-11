@@ -7,24 +7,24 @@
 - name: deploy | ensure nginx config for app is disabled
   sudo: True
   file: path=/etc/nginx/sites-enabled/{{ app_name }}.conf state=absent
-  when: app_git_checkout.before != app_git_checkout.after
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
 
 - name: deploy | ensure nginx is reloaded after disabling nginx config for app
   sudo: True
   service: name=nginx state=reloaded
-  when: app_git_checkout.before != app_git_checkout.after
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
 
 - name: deploy | synchronize stage directory with current directory
-  synchronize: src={{ app_deploy_path }}/stage dest={{ app_deploy_path }}/current
+  command: rsync --delay-updates -F --compress --delete-after --archive {{ app_deploy_path }}/stage/ {{ app_deploy_path }}/current
   when: app_git_checkout.before != app_git_checkout.after
 
 - name: deploy | ensure nginx config for app is enabled
   sudo: True
   file: src=/etc/nginx/sites-available/{{ app_name }}.conf dest=/etc/nginx/sites-enabled/{{ app_name }}.conf state=link
-  when: app_git_checkout.before != app_git_checkout.after
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
 
 - name: deploy | ensure nginx is reloaded after enabling nginx config for app
   sudo: True
   service: name=nginx state=reloaded
-  when: app_git_checkout.before != app_git_checkout.after
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
 

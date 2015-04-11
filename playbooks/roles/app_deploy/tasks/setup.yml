@@ -9,4 +9,5 @@
   sudo: True
   template: src=nginx_vhost_config.j2 dest=/etc/nginx/sites-available/{{ app_name }}.conf
   register: app_nginx_config
+  when: app_host is defined
 

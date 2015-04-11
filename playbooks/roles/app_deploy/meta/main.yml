@@ -1,5 +1,5 @@
 ---
 dependencies:
   - { role: base }
-  - { role: nginx, port: 80 }
+  - { role: nginx, port: 80, when: app_host is defined }
   - { role: git }
