@@ -2,7 +2,7 @@ server {
         listen 80;
         listen [::]:80 ipv6only=on;
 
-        root /mnt/deploy/{{ app_name }};
+        root /mnt/deploy/{{ app_name }}/current;
         index index.html index.htm;
 
         location / {
