@@ -1,6 +1,6 @@
 ---
-- name: deploy app {{ app_name }}
-  hosts: tag_Apps_symanex-site:tag_Apps_*,symanex-site:tag_Apps_symanex-site,*
+- name: update app {{ app_name }}
+  hosts: tag_Roles_nginx:tag_Roles_nginx,*:tag_Roles_*,nginx:tag_Roles_*,nginx,*
   remote_user: "{{ remote_user }}"
   roles:
   - { role: app_deploy }
