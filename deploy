@@ -7,19 +7,18 @@ aws = AWSTools()
 app_name = False
 required_server_roles = [ "nginx" ]
 ansible_tags = [ "setup", "start", "deploy" ]
+aws_filters = {"tag:Roles":"nginx"}
 min_server_count = 1
-cur_servers = aws.get_servers(filters={"tag:Roles":"nginx"})
-
 
 def usage(msg = False):
   if msg:
     print "%s" % (msg)
   print "Usage:"
-  print "deploy -h -a <app_name> -c <servercount>"
-  print "deploy --help --app=<app_name> --count=<count>"
+  print "deploy -h -d -a <app_name> -c <servercount>"
+  print "deploy --help --dedicated --app=<app_name> --count=<count>"
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:],"ht:a:c:",["help","app=","count="])
+  opts, args = getopt.getopt(sys.argv[1:],"hdt:a:c:",["help","app=","count="])
 except getopt.GetoptError:
   usage()
   sys.exit(2)
@@ -27,6 +26,8 @@ for opt, arg in opts:
   if opt in ("-h", "--help"):
     usage()
     sys.exit()
+  elif opt in ("-d", "--dedicated"):
+    aws_filters["tag:Apps"] = app_name
   elif opt in ("-a", "--app"):
     app_name = arg
   elif opt in ("-c", "--count"):
@@ -38,6 +39,7 @@ if not app_name:
   usage("ERROR: <app_name> needs to be specified")
   sys.exit(2)
 
+cur_servers = aws.get_servers(aws_filters)
 gap_server_count = min_server_count - len(cur_servers)
 
 print "=> checking that enough servers are running ..."
