@@ -21,6 +21,10 @@
   shell: mv ~/.bashrc ~/.bashrc.d/000_original.sh
   when: not bashrc_moved.stat.exists and bashrc.stat.exists
 
+- name: setup | ensure original .bashrc file has mode 0700
+  file: path=~/.bashrc.d/000_original.sh mode=0700
+  when: bashrc_moved.stat.exists
+
 - name: setup | ensure new .bashrc to handle .bashrc.d is installed
   copy: src=bashrc dest=~/.bashrc
 
