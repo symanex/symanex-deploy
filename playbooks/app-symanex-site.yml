@@ -1,6 +1,6 @@
 ---
 - name: update app {{ app_name }}
-  hosts: tag_Roles_nginx:tag_Roles_nginx,*:tag_Roles_*,nginx:tag_Roles_*,nginx,*
+  hosts: tag_Roles_nginx:tag_Roles_nginx_*:tag_Roles_*_nginx:tag_Roles_*_nginx_*
   remote_user: "{{ remote_user }}"
   roles:
   - { role: app_deploy }
