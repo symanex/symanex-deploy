@@ -51,10 +51,6 @@ class AWSTools:
       servers.append(Server(instance=instance))
     return servers
 
-  def get_instances(self, filters={}):
-    '''get a list of instances (by default all)'''
-    return self.ec2.get_only_instances(filters=filters)
-
   def terminate_instances(self, filters={}):
     '''terminate instances (by default all)'''
     instances = []
@@ -93,6 +89,7 @@ class Server:
 
   default_key_name = 'symanex-test'
   default_roles = []
+  default_apps = []
   default_connection_wait_time = 3.0
   default_connection_attempts = 30
   default_aws_zones = [ "eu-west-1a", "eu-west-1b", "eu-west-1c" ]
@@ -107,20 +104,14 @@ class Server:
     else:
       self.__instance = AWSTools().get_latest_image().run(key_name=self.default_key_name).instances[0]
     
-    self.__roles = []
-    for role in self.default_roles:
-      self.add_role(role)
-
-    self.__apps = [] 
     self.__aws = AWSTools()
 
   def __update_instance(self):
     self.__instance = self.__aws.get_instances(filters={'instance-id':self.__instance.id})[0]
 
-  def __sync_aws_tag(self, tag_name, items):
-    self.__aws.ec2.create_tags(self.__instance.id, {tag_name:','.join(set(items))})
-    self.__update_instance()
-    return self
+  def __update_tag(self, tag_name, items):
+    self.__instance.add_tag(tag_name, value=','.join(set(items)))
+    return self.__instance.tags[tag_name].split(',')
 
   @property
   def status(self):
@@ -130,6 +121,9 @@ class Server:
   @property
   def instance_id(self):
     return self.__instance.id
+
+  def get_instance(self):
+    return self.__instance
 
   def wait_for_instance(self, quite=True):
     '''wait for the EC2 instance attached to this server to become available'''
@@ -195,42 +189,54 @@ class Server:
 
   def get_roles(self):
     '''get a list of the Server's assigned roles'''
-    self.__roles = self.__instance.tags['Roles'].split(',')
-    return self.__roles
+    roles = []
+    try:
+      roles = self.__instance.tags['Roles'].split(',')
+    except:
+      pass
+    return roles
 
   def add_role(self, role_name):
     '''add a role to the Server'''
-    roles = self.__roles
+    roles = self.get_roles()
     roles.append(role_name)
     roles = set(roles)
-    self.__roles = roles
-    self.__sync_aws_tag("Roles", self.__roles)
+    self.__update_tag("Roles", roles)
     return self
 
   def remove_role(self, role_name):
     '''remove a role from the Server'''
-    self.__roles.remove(role_name)
-    self.__sync_aws_tag("Roles", self.__roles)
+    roles = self.get_roles()
+    roles.remove(role_name)
+    self.__update_tag("Roles", roles)
     return self
+
+  def get_apps(self):
+    apps = []
+    try:
+      apps = self.__instance.tags['Apps'].split(',')
+    except:
+      pass
+    return apps
 
   def add_app(self, app_name):
     '''add an app to the Server'''
     if not any(x in self.VALID_APP_SERVICE_ROLES for x in self.get_roles()):
       import errno
       raise EnvironmentError(errno.EPERM, "server does not have a compatible role, valid: %s" % (','.join(set(self.VALID_APP_SERVICE_ROLES))))
-    apps = self.__apps
-    self.__apps.append(app_name)
+    apps = self.get_apps()
+    apps.append(app_name)
     apps = set(apps)
-    self.__apps = apps
-    self.__sync_aws_tag("Apps", self.__apps)
+    self.__update_tag("Apps", apps)
     self.attach_to_elb(app_name)
     # TODO: register DNS name with Route53 if not already there
     return self
 
   def remove_app(self, app_name):
     '''remove an app from the Server'''
-    self.__apps.remove(app_name)
-    self.__sync_aws_tag("Apps", self.__apps)
+    apps = self.get_apps()
+    apps.remove(app_name)
+    self.__update_tag("Apps", self.__apps)
     self.detach_from_elb(app_name)
     return self
 
