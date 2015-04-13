@@ -1,6 +1,6 @@
 ---
 - name: provision nginx server
-  hosts: tag_Roles_nginx:tag_Roles_*,nginx:tag_Roles_nginx,*:self
+  hosts: tag_Roles_nginx:tag_Roles_nginx_*:tag_Roles_*_nginx:tag_Roles_*_nginx_*
   remote_user: "{{ remote_user }}"
   roles: 
   - nginx
