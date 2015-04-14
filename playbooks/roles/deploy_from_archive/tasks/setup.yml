@@ -11,3 +11,7 @@
   service: name=nginx state=reloaded
   when: app_nginx_config is defined and app_nginx_config.changed
 
+- name: setup | ensure unzip is installed
+  sudo: True
+  apt: update_cache=yes name=unzip state=latest
+
