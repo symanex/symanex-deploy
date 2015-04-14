@@ -12,7 +12,7 @@
   register: download_archive
 
 - name: deploy | ensure archive file is extracted
-  unarchive: src={{ app_archive_path }} dest={{ app_release_path }} copy=no
+  unarchive: src={{ app_archive_path }}/{{ app_archive_url | basename }} dest={{ app_release_path }} copy=no
   register: extract_archive
   when: download_archive is defined and download_archive.changed
 
