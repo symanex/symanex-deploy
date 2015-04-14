@@ -1,0 +1,25 @@
+---
+
+- name: undeploy | ensure nginx config for app is disabled
+  sudo: True
+  file: path=/etc/nginx/apps-enabled/{{ app_name }}.conf state=absent
+  when: app_host is defined
+
+- name: undeploy | ensure nginx config for app is removed
+  sudo: True
+  file: path=/etc/nginx/apps-available/{{ app_name }}.conf state=absent
+  when: app_host is defined
+
+- name: undeploy | ensure nginx is reloaded after disabling and removing nginx config for app
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_host is defined
+
+- name: undeploy | ensure app root directory is removed
+  sudo: True
+  file: path=/mnt/deploy/{{ app_name }} state=absent
+
+- name: undeploy | ensure user environment configuration is removed
+  file: path=~/.bashrc.d/{{ app_name }}_environment.sh state=absent
+  when: app_environment is defined
+

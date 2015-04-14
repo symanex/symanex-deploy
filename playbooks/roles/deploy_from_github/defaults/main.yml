@@ -1,0 +1,3 @@
+app_deploy_path: "/mnt/deploy/{{ app_name }}"
+app_symlink_deeplink_dir: ""
+app_environment: {}

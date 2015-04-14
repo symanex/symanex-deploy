@@ -1,0 +1,5 @@
+app_deploy_path: "/mnt/deploy/{{ app_name }}"
+app_archive_path: "{{ app_deploy_path }}/artifacts/{{ app_archive_url | basename }}"
+app_release_path: "{{ app_deploy_path}}/releases/{{ app_archive_url | basename | regex_replace('\\.[^.]*$','') }}"
+app_symlink_deeplink_dir: ""
+app_environment: {}

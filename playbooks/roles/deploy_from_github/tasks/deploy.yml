@@ -1,0 +1,58 @@
+---
+
+- name: deploy | ensure that the required directories exist
+  file: dest={{ item }} state=directory owner={{ remote_user }}
+  with_items:
+  - "{{ app_deploy_path }}/source"
+  - "{{ app_deploy_path }}/releases"
+  sudo: True
+
+- name: deploy | ensure source code is on requested version
+  git: repo=https://github.com/{{ app_repo }} dest={{ app_deploy_path }}/source version={{ app_version }} accept_hostkey=yes
+  register: app_git_checkout
+
+- name: deploy | ensure current release directory exists
+  file: path={{ app_deploy_path }}/releases/{{ app_git_checkout.after }} state=directory
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure current release directory is synced
+  command: rsync --exclude=.git --exclude=.gitignore --delay-updates -F --compress --delete-after --archive {{ app_deploy_path }}/source/ {{ app_deploy_path }}/releases/{{ app_git_checkout.after }}
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure symlink points to current release directory
+  file: src={{ app_deploy_path }}/releases/{{ app_git_checkout.after }}{{ app_symlink_deeplink_dir }} dest={{ app_deploy_path }}/current state=link
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx config for app is disabled
+  sudo: True
+  file: path=/etc/nginx/sites-enabled/{{ app_name }}.conf state=absent
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx is reloaded after disabling nginx config for app
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure user environment config file for app is created
+  file: path=~/.bashrc.d/{{ app_name }}_environment.sh state=touch mode=0700
+  when: app_environment | length > 0
+
+- name: deploy | ensure user environment config for app is setup
+  lineinfile: dest=~/.bashrc.d/{{ app_name }}_environment.sh regexp="^export {{ item.key }}=" line="export {{ item.key }}={{ item.value }}"
+  with_dict: app_environment
+  when: app_environment | length > 0
+
+- name: deploy | ensure symlink points to current release directory
+  file: src={{ app_deploy_path }}/releases/{{ app_git_checkout.after }}{{ app_symlink_deeplink_dir }} dest={{ app_deploy_path }}/current state=link owner={{ remote_user }}
+  when: app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx config for app is enabled
+  sudo: True
+  file: src=/etc/nginx/sites-available/{{ app_name }}.conf dest=/etc/nginx/sites-enabled/{{ app_name }}.conf state=link
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
+
+- name: deploy | ensure nginx is reloaded after enabling nginx config for app
+  sudo: True
+  service: name=nginx state=reloaded
+  when: app_host is defined and app_git_checkout.before != app_git_checkout.after
+

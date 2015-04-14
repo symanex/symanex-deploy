@@ -1,0 +1,15 @@
+---
+
+- include: setup.yml
+  tags:
+  - setup
+
+- include: deploy.yml
+  tags:
+  - deploy
+
+- include: undeploy.yml
+  tags:
+  - undeploy
+  - teardown
+
