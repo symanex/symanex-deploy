@@ -51,6 +51,10 @@ class AWSTools:
       servers.append(Server(instance=instance))
     return servers
 
+  def get_instances(self, filters={}):
+    '''get a list of instances (by default all)'''
+    return self.ec2.get_only_instances(filters=filters)
+
   def terminate_instances(self, filters={}):
     '''terminate instances (by default all)'''
     instances = []
