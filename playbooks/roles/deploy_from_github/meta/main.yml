@@ -3,4 +3,3 @@ dependencies:
   - { role: base }
   - { role: nginx, port: 80, when: app_host is defined }
   - { role: git }
-  - { role: aws-amitools-ec2 }

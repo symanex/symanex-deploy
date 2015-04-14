@@ -1,0 +1,28 @@
+---
+
+- apt_key: url=https://jenkins-ci.org/debian/jenkins-ci.org.key state=present
+  sudo: True
+
+- apt_repository: repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
+  sudo: True
+
+- apt: name=jenkins state=latest update_cache=yes
+  sudo: True
+
+- lineinfile: dest=/etc/default/jenkins regexp=^HTTP_PORT= line=HTTP_PORT={{ port }}
+  sudo: True
+  register: jenkins_port
+
+- name: Install/update plugins
+  shell: java -jar {{ jenkins_home }}/jenkins-cli.jar -s http://localhost:{{ port }} install-plugin {{ item }}
+  when: plugins_installed.changed and plugins_installed.stdout.find('{{ item }}') == -1
+  with_items: plugins
+
+- service: name=jenkins state=restarted
+  sudo: True
+  when: jenkins_port.changed
+
+- service: name=jenkins state=started
+  sudo: True
+
+
