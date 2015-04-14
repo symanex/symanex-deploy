@@ -1,0 +1,16 @@
+---
+- name: update {{ app_name }}
+  hosts: ec2 
+  remote_user: "{{ remote_user }}"
+  roles:
+  - { role: deploy_from_archive }
+  vars:
+  - app_name: "aws-amitools-ec2"
+  - app_archive_url: "http://s3.amazonaws.com/ec2-downloads/ec2-ami-tools-{{ app_version }}.zip"
+  - app_version: "1.5.6"
+  - app_environment: {
+    "EC2_HOME": "{{ app_deploy_path }}/current",
+    "EC2_AMITOOL_HOME": "{{ app_deploy_path }}/current",
+    "PATH": "$PATH:${EC2_AMITOOL_HOME:-EC2_HOME}/bin"
+  }
+  - app_symlink_deeplink_dir: "/ec2-ami-tools-{{ app_version }}"
