@@ -1,9 +1,9 @@
 ---
-- name: update app {{ app_name }}
+- name: update {{ app_name }}
   hosts: tag_Roles_nginx:tag_Roles_nginx_*:tag_Roles_*_nginx:tag_Roles_*_nginx_*
   remote_user: "{{ remote_user }}"
   roles:
-  - { role: app_deploy }
+  - { role: deploy_from_github }
   vars:
   - app_name: "symanex-site"
   - app_repo: "symanex/symanex-site"
