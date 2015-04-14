@@ -3,7 +3,7 @@
 - name: deploy | ensure that the required directories exist
   file: dest={{ item }} state=directory owner={{ remote_user }}
   with_items:
-  - "{{ app_deploy_path }}/artifacts"
+  - "{{ app_archive_path }}"
   - "{{ app_release_path }}"
   sudo: True
 
