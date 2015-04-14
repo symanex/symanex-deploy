@@ -1,0 +1,5 @@
+[tag_Roles_nginx]
+localhost ansible_connection=local
+
+[ec2]
+localhost ansible_connection=local
