@@ -7,18 +7,17 @@ aws = AWSTools()
 app_name = False
 required_server_roles = [ "nginx" ]
 ansible_tags = [ "setup", "start", "deploy" ]
-aws_filters = {"tag:Roles":"nginx"}
 min_server_count = 1
 
 def usage(msg = False):
   if msg:
     print "%s" % (msg)
   print "Usage:"
-  print "deploy -h -d -a <app_name> -c <servercount>"
-  print "deploy --help --dedicated --app=<app_name> --count=<count>"
+  print "deploy -h -a <app_name> -c <servercount>"
+  print "deploy --help --app=<app_name> --count=<count>"
 
 try:
-  opts, args = getopt.getopt(sys.argv[1:],"hdt:a:c:",["help","app=","count="])
+  opts, args = getopt.getopt(sys.argv[1:],"ht:a:c:",["help","app=","count=","tags="])
 except getopt.GetoptError:
   usage()
   sys.exit(2)
@@ -26,8 +25,6 @@ for opt, arg in opts:
   if opt in ("-h", "--help"):
     usage()
     sys.exit()
-  elif opt in ("-d", "--dedicated"):
-    aws_filters["tag:Apps"] = app_name
   elif opt in ("-a", "--app"):
     app_name = arg
   elif opt in ("-c", "--count"):
@@ -39,31 +36,36 @@ if not app_name:
   usage("ERROR: <app_name> needs to be specified")
   sys.exit(2)
 
-cur_servers = aws.get_servers(aws_filters)
-gap_server_count = min_server_count - len(cur_servers)
+cur_servers = []
+cur_servers += aws.get_servers(filters={"tag:Roles":"nginx"})
+cur_servers += aws.get_servers(filters={"tag:Roles":"nginx,*"})
+cur_servers += aws.get_servers(filters={"tag:Roles":"*,nginx"})
+cur_servers += aws.get_servers(filters={"tag:Roles":"*,nginx,*"})
+cur_server_count = len(cur_servers)
+gap_server_count = min_server_count - cur_server_count
 
-print "=> checking that enough servers are running ..."
-if gap_server_count > 0:
-  print "not enough suitable servers found (%s of %s)" % (cur_server_count, min_server_count)
-  print "lauching %s new server(s)" % (gap_server_count)
-  servers = []
-  for i in range(0, gap_server_count):
-    servers.append(Server())
-  for server in servers:
-    server.wait_for_instance(quite=False)
-    server.wait_for_port(22, quite=False)
-    for role in required_server_roles:
-      print "registering Role %s at instance %s" % (role, server.instance_id)
-      server.add_role(role)
-    print "registering App %s at instance %s" % (app_name, server.instance_id)
-    server.add_app(app_name)
-  servers = False
-
-print "=> registering App '%s' at existing instances ..." % (app_name)
-for cur_server in cur_servers:
-  print "registering App %s at instance %s" % (app_name, cur_server.instance_id)
-  cur_server.add_app(app_name)
-cur_servers = False
+if "setup" in ansible_tags:
+  print "=> checking that enough servers are running ..."
+  if gap_server_count > 0:
+    print "not enough suitable servers found (%s of %s)" % (cur_server_count, min_server_count)
+    print "lauching %s new server(s)" % (gap_server_count)
+    servers = []
+    for i in range(0, gap_server_count):
+      servers.append(Server())
+    for server in servers:
+      server.wait_for_instance(quite=False)
+      server.wait_for_port(22, quite=False)
+      for role in required_server_roles:
+        print "registering Role '%s' at new instances %s" % (role, server.instance_id)
+        server.add_role(role)
+      print "registering App '%s' at instance %s" % (app_name, server.instance_id)
+      server.add_app(app_name)
+    servers = False
+  print "=> registering App '%s' at existing instances ..." % (app_name)
+  for cur_server in cur_servers:
+    print "registering App '%s' at instance %s" % (app_name, cur_server.instance_id)
+    cur_server.add_app(app_name)
+  cur_servers = False
 
 print "=> preparing ansible run to update all related servers"
 import ansible.runner
@@ -86,3 +88,9 @@ pb = ansible.playbook.PlayBook(
 print "=> running ansible to update all related servers"
 pb.run()
 
+if "undeploy" in ansible_tags:
+  print "=> unregistering App '%s' on existing instances ..."
+  for server in aws.get_servers(aws_filters):
+    print "unregistering App '%s' on instance %s" % (app_name, server.instance_id)
+    server.remove_app(app_name)
+  servers = False
