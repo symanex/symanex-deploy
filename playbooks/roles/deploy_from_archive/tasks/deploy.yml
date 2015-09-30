@@ -1,20 +1,28 @@
 ---
 
+- debug: var=app_deploy_path
+- debug: var=app_archive_path
+- debug: var=app_release_path
+- debug: var=app_version
+
 - name: deploy | ensure that the required directories exist
-  file: dest={{ item }} state=directory owner={{ remote_user }}
+  file: dest={{ item }} state=directory
   with_items:
   - "{{ app_archive_path }}"
   - "{{ app_release_path }}"
-  sudo: True
 
 - name: deploy | ensure archive file is downloaded
   get_url: url={{ app_archive_url }} dest={{ app_archive_path }}
   register: download_archive
 
+- debug: var=download_archive
+
 - name: deploy | ensure archive file is extracted
   unarchive: src={{ app_archive_path }}/{{ app_archive_url | basename }} dest={{ app_release_path }} copy=no
   register: extract_archive
   when: download_archive is defined and download_archive.changed
+
+- debug: var=extract_archive
 
 - name: deploy | ensure nginx config for app is disabled
   sudo: True
