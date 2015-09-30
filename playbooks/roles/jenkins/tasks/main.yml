@@ -9,20 +9,18 @@
 - apt: name=jenkins state=latest update_cache=yes
   sudo: True
 
-- lineinfile: dest=/etc/default/jenkins regexp=^HTTP_PORT= line=HTTP_PORT={{ port }}
+- lineinfile: dest=/etc/default/jenkins regexp=^HTTP_PORT= line=HTTP_PORT={{ jenkins_port }}
   sudo: True
-  register: jenkins_port
+  register: configure_jenkins_port
 
 - name: Install/update plugins
   shell: java -jar {{ jenkins_home }}/jenkins-cli.jar -s http://localhost:{{ port }} install-plugin {{ item }}
   when: plugins_installed.changed and plugins_installed.stdout.find('{{ item }}') == -1
-  with_items: plugins
+  with_items: jenkins_plugins
 
 - service: name=jenkins state=restarted
   sudo: True
-  when: jenkins_port.changed
+  when: configure_jenkins_port.changed
 
 - service: name=jenkins state=started
   sudo: True
-
-
