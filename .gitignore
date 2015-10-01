@@ -1,3 +1,4 @@
 .DS_Store
 *.pyc
 .venv
+playbooks/roles/jenkins/files/jenkins_user_id_rsa*

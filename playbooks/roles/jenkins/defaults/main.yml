@@ -1,2 +1,6 @@
+jenkins_home: /var/lib/jenkins
 jenkins_port: 8080
 jenkins_plugins: [ ]
+jenkins_admin_group: admin
+jenkins_staff_group: staff
+jenkins_users_group: users

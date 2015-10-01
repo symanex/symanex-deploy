@@ -1,0 +1,13 @@
+---
+- name: "provision jenkins server"
+  hosts: "tag_Roles_jenkins-master:tag_Roles_*,jenkins-master:tag_Roles_jenkins-master,*"
+  remote_user: "{{ remote_user }}"
+  gather_facts: no
+  roles:
+  - role: "python"
+    python_modules: [ "jenkins-job-builder", "jenkinsapi", "httplib2" ]
+  - role: "jenkins"
+    jenkins_plugins: [ "git", "scm-sync-configuration" ]
+    jenkins_admin_users: {
+      olsaki: "$6$4GTqT775NiT$zkrwo1NejmV.M/0fihwiQd11o00Rh293xWA40dBMLs2c67u29snIVHIS3gIKNq6PK1JxahLDbidzjLTuJ6CIW1"
+    }
