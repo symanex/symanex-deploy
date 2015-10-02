@@ -58,8 +58,23 @@
   sudo: True
   register: jenkins_cli_download
 
+- name: get list of installed plugins
+  shell: "java -jar {{ jenkins_user.home }}/jenkins-cli.jar -s http://localhost:{{ jenkins_port }}/ list-plugins | awk '{print $1}'"
+  sudo: True
+  sudo_user: jenkins
+  register: jenkins_plugins_present
+  changed_when: False
+
 - name: install and update plugins
   shell: "java -jar {{ jenkins_user.home }}/jenkins-cli.jar -s http://localhost:{{ jenkins_port }} install-plugin {{ item }}"
   sudo: True
   sudo_user: jenkins
-  with_items: jenkins_plugins
+  with_items: "{{ jenkins_plugins | difference(jenkins_plugins_present.stdout_lines) }}"
+  register: jenkins_plugin_installation
+
+- service: name=jenkins state=restarted
+  sudo: True
+  when: jenkins_plugin_installation | changed
+
+- service: name=jenkins state=started
+  sudo: True
