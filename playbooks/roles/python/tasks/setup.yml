@@ -1,0 +1,17 @@
+---
+
+- name: "setup | ensure latest version of python is present"
+  apt:
+    name: "{{ item }}"
+    state: "latest"
+  with_items:
+  - "python"
+  - "python-pip"
+  sudo: True
+
+- name: "setup | ensure latest version of required python modules are present"
+  pip:
+    name: "{{ item }}"
+    state: "latest"
+  with_items: "{{ python_modules }}"
+  sudo: True

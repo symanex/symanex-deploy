@@ -1,15 +1,3 @@
 ---
-
-- apt:
-    name: "{{ item }}"
-    state: "latest"
-  with_items:
-  - "python"
-  - "python-pip"
-  sudo: True
-
-- pip:
-    name: "{{ item }}"
-    state: "latest"
-  with_items: "{{ python_modules }}"
-  sudo: True
+- include: setup.yml
+  tags: setup

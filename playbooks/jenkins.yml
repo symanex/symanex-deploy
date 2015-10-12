@@ -4,6 +4,7 @@
   remote_user: "{{ remote_user }}"
   gather_facts: no
   roles:
+  - role: "git"
   - role: "python"
     python_modules: [ "jenkins-job-builder", "jenkinsapi", "httplib2" ]
   - role: "jenkins"

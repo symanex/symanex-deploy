@@ -1,0 +1,98 @@
+---
+
+- name: "setup | ensure jenkins ci apt key is present"
+  apt_key: url=https://jenkins-ci.org/debian/jenkins-ci.org.key state=present
+  sudo: True
+
+- name: "setup | ensure jenksin ci apt repository configuration is present"
+  apt_repository: repo='deb http://pkg.jenkins-ci.org/debian binary/' state=present
+  sudo: True
+
+- name: "setup | ensure latest version of jenkins ci server is present"
+  apt: name=jenkins state=latest update_cache=yes
+  sudo: True
+
+- name: "setup | ensure jenkins ci http port is set"
+  lineinfile: dest=/etc/default/jenkins regexp=^HTTP_PORT= line=HTTP_PORT={{ jenkins_port }}
+  sudo: True
+  register: jenkins_port_config
+
+- name: "setup | ensure jenkins ci config.xml is uptodate"
+  template: src=config.xml.j2 dest=/var/lib/jenkins/config.xml owner=jenkins group=jenkins
+  sudo: True
+  register: jenkins_main_config
+
+- name: "setup | ensure jenkins ci user is in group 'shadow'"
+  user: name=jenkins groups=shadow shell=/sbin/nologin append=yes
+  sudo: True
+  register: jenkins_user
+
+- name: "setup | ensure jenkins ci user's .ssh directory is present"
+  file: path="{{ jenkins_user.home }}/.ssh" owner="jenkins" group="jenkins" state="directory"
+  sudo: True
+
+- name: "setup | ensure jenkins ci user's private key is present"
+  copy: src="jenkins_user_id_rsa" dest="{{ jenkins_user.home }}/.ssh/id_rsa" owner="jenkins" group="jenkins" mode=0400
+  sudo: True
+
+- name: "setup | ensure jenkins ci server's jenkins user directory is present"
+  file: path="{{ jenkins_user.home }}/users/jenkins" owner="jenkins" group="jenkins" state="directory" recurse=yes
+  sudo: True
+
+- name: "setup | ensure jenkins ci server's jenkins user configuration is uptodate"
+  template: src="user.xml.j2" dest="{{ jenkins_user.home }}/users/jenkins/config.xml" owner="jenkins" group="jenkins"
+  sudo: True
+  register: jenkins_user_public_key
+
+- name: "setup | ensure jenkins ci server is restarted if config has changed"
+  service: name=jenkins state=restarted
+  sudo: True
+  when: jenkins_port_config.changed or jenkins_main_config.changed or jenkins_user_public_key.changed
+
+- name: "setup | ensure jenkins ci admin users are present"
+  user: name="{{ item.key }}" group="{{ jenkins_users_group }}" groups="{{ jenkins_admin_group }}" password="{{ item.value }}" append=yes
+  sudo: True
+  with_dict: "{{ jenkins_admin_users }}"
+  when: jenkins_admin_users is defined
+
+- name: "setup | ensure jenkins ci server is started"
+  service: name=jenkins state=started
+  sudo: True
+
+- name: "setup | ensure jenkins ci server port is open"
+  wait_for: port="{{ jenkins_port }}"
+
+# requires httplib2
+- name: "setup | ensure jenkins ci server application is responding"
+  uri: url="http://localhost:{{ jenkins_port }}" status_code=200,403,503 timeout=300
+  register: jenkins_wait
+  until: jenkins_wait.status == 200 or jenkins_wait.status == 403
+  retries: 60
+
+- name: "setup | ensure jenkins ci server cli is present"
+  get_url: url="http://jenkins:@localhost:{{ jenkins_port }}/jnlpJars/jenkins-cli.jar" dest="{{ jenkins_user.home }}/jenkins-cli.jar" owner="jenkins" group="jenkins"
+  sudo: True
+  register: jenkins_cli_download
+
+- name: "setup | get list of installed plugins for jenkins ci server"
+  shell: "java -jar {{ jenkins_user.home }}/jenkins-cli.jar -s http://localhost:{{ jenkins_port }}/ list-plugins | awk '{print $1}'"
+  sudo: True
+  sudo_user: jenkins
+  register: jenkins_plugins_present
+  changed_when: False
+
+- name: "setup | ensure jenkins ci server plugins are installed"
+  shell: "java -jar {{ jenkins_user.home }}/jenkins-cli.jar -s http://localhost:{{ jenkins_port }} install-plugin {{ item }}"
+  sudo: True
+  sudo_user: jenkins
+  with_items: "{{ jenkins_plugins | difference(jenkins_plugins_present.stdout_lines) }}"
+  register: jenkins_plugin_installation
+
+- name: "setup | ensure jenkins ci server is restarted when plugins where installed or updated"
+  service: name=jenkins state=restarted
+  sudo: True
+  when: jenkins_plugin_installation | changed
+
+- name: "setup | ensure jenkins ci server is started"
+  service: name=jenkins state=started
+  sudo: True
