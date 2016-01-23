@@ -74,7 +74,7 @@ class AWSTools:
 
   def get_images(self, filters={}):
     '''get a list of images'''
-    filter_defaults = {'name':'ubuntu/images/ubuntu-trusty-*', 'root-device-type':'instance-store'}
+    filter_defaults = {'name':'ubuntu/images/hvm/ubuntu-trusty-*'}
     compiled_filters = dict(filter_defaults.items() + filters.items())
     return self.ec2.get_all_images(filters=compiled_filters)
 
@@ -99,14 +99,14 @@ class Server:
   default_aws_zones = [ "eu-west-1a", "eu-west-1b", "eu-west-1c" ]
   default_aws_elb_listener = [ "80", "80", "HTTP" ]
 
-  def __init__(self, instance=False, image=False):
+  def __init__(self, instance=False, image=False, instance_type='t2.nano'):
 
     if not instance == False:
       self.__instance = instance
     elif not image == False:
-      self.__instance = image.run(key_name=self.default_key_name).instances[0]
+      self.__instance = image.run(key_name=self.default_key_name,instance_type=instance_type).instances[0]
     else:
-      self.__instance = AWSTools().get_latest_image().run(key_name=self.default_key_name).instances[0]
+      self.__instance = AWSTools().get_latest_image().run(key_name=self.default_key_name,instance_type=instance_type).instances[0]
     
     self.__aws = AWSTools()
 
